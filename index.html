@@ -102,7 +102,7 @@
   <div class="card">
     <div class="eyebrow">Secure Access</div>
     <div class="card-title">Welcome Back</div>
-    <div class="card-sub">Apna email aur password enter karein</div>
+    <div class="card-sub">Sign in to your account</div>
 
     <div class="field">
       <label for="email">Email Address</label>
@@ -129,7 +129,7 @@
     <button class="btn" id="loginBtn" type="button">
       <div class="btn-inner">
         <div class="spin" id="spin"></div>
-        <span id="btnTxt">Dashboard Access Karein</span>
+        <span id="btnTxt">Login to Dashboard</span>
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </div>
     </button>
@@ -172,17 +172,19 @@
   async function doLogin() {
     const email = $('email').value.trim().toLowerCase();
     const password = $('password').value;
-    if (!email || !password) { showErr("Email aur password dono zaroori hain."); return; }
+    if (!email || !password) { showErr("Email and Password are required."); return; }
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`);
       const data = await res.json();
       if (data.success) {
-        $('loadSub').textContent = `Welcome, ${data.name}! Dashboard load ho raha hai...`;
+        $('loadSub').textContent = `Welcome, ${data.name}! Loading your dashboard...`;
         $('loadingScreen').classList.add('show');
         $('dashFrame').src = data.dashboard_url;
-
-        function showDash() {
+        let dashShown = false;
+        function showDashOnce() {
+          if (dashShown) return;
+          dashShown = true;
           $('loadingScreen').classList.remove('show');
           $('loginPage').classList.add('hide');
           $('mainFooter').style.display = 'none';
@@ -192,27 +194,20 @@
           $('partnerName').textContent = data.name;
           document.body.style.overflow = 'hidden';
         }
-
-        let dashShown = false;
-        function showDashOnce() {
-          if (dashShown) return;
-          dashShown = true;
-          showDash();
-        }
         $('dashFrame').onload = showDashOnce;
-        setTimeout(showDashOnce, 5000); // fallback
+        setTimeout(showDashOnce, 5000);
       } else {
-        showErr("Galat email ya password. Dobara try karein.");
+        showErr("Invalid email or password. Please try again.");
         setLoading(false);
       }
     } catch (err) {
-      showErr("Connection error. Thodi der baad try karein.");
+      showErr("Connection error. Please try again in a moment.");
       setLoading(false);
     }
   }
 
   function doLogout() {
-    $('dashFrame').onload = null; // onload band karo pehle
+    $('dashFrame').onload = null;
     $('dashFrame').src = 'about:blank';
     $('dashPage').classList.remove('show');
     $('dashHeader').classList.remove('show');
@@ -228,7 +223,7 @@
   function setLoading(on) {
     $('loginBtn').disabled = on;
     $('spin').style.display = on ? 'block' : 'none';
-    $('btnTxt').textContent = on ? 'Verify ho raha hai...' : 'Dashboard Access Karein';
+    $('btnTxt').textContent = on ? 'Verifying your credentials...' : 'Login to Dashboard';
   }
 
   function showErr(msg) {
